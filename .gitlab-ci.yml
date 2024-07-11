@@ -1,0 +1,36 @@
+image: node:18-alpine
+
+variables:
+  GIT_SUBMODULE_STRATEGY: recursive
+  TARGET_DIR: "trading-core-data-services"
+
+stages:
+- deploy_services
+
+before_script:
+  - chmod 400 $SSH_KEY
+  - apk add --no-cache openssh-client ca-certificates rsync
+#  - apt-get update && apt-get install nodejs -y
+#  - curl -fsSL https://deb.nodesource.com/setup_19.x | sudo -E bash - && sudo apt-get install -y nodejs
+#  - curl https://www.npmjs.com/install.sh | sh
+deploy:
+  stage: deploy_services
+  script:
+    - echo "TELEGRAM_BOT_TOKEN=$TELEGRAM_BOT_TOKEN" >> .env
+    - echo "MONGO_DB_HOST=$MONGO_DB_HOST" >> .env
+    - echo "MONGO_DB_USERNAME=$MONGO_DB_USERNAME" >> .env
+    - echo "MONGO_DB_PASSWORD=$MONGO_DB_PASSWORD" >> .env
+    - echo "POSTGRES_PASSWORD=$POSTGRES_PASSWORD" >> .env
+    - echo "POSTGRES_USER=$POSTGRES_USER" >> .env
+    - echo "POSTGRES_DB_HOST=$POSTGRES_DB_HOST" >> .env
+    - ssh -o StrictHostKeyChecking=no -i $SSH_KEY root@$MAIN_SERVER "mkdir -p ${TARGET_DIR} && mkdir -p ${TARGET_DIR}/logs "
+#    - scp -prq -o StrictHostKeyChecking=no -i $SSH_KEY ./* root@$MAIN_SERVER:~/$TARGET_DIR
+#    - scp -q -o StrictHostKeyChecking=no -i $SSH_KEY .env root@$MAIN_SERVER:~/$TARGET_DIR/.env
+    - rsync -avz -e "ssh -o StrictHostKeyChecking=no -i \"$SSH_KEY\"" --progress --exclude=".git" ./ root@$MAIN_SERVER:~/$TARGET_DIR/
+    - echo "Use 'make rebuild' to update services"
+#    - chmod -R 755 ./src/frontend/build
+#    - ssh -o StrictHostKeyChecking=no -i $SSH_KEY root@$MAIN_SERVER "
+#      cd \"$TARGET_DIR\" &&
+#      docker-compose build &&
+#      docker-compose down &&
+#      docker-compose up -d "

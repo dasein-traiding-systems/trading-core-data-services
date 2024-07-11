@@ -1,0 +1,60 @@
+version: '3.8'
+services:
+#
+#  trading_diary:
+#    build:
+#      context: .
+#      dockerfile: ./docker-images/trading-diary/Dockerfile
+#    env_file: ./secrets/.env
+#    restart: always
+#    volumes:
+#      - ./logs:/app/logs
+#      - ./src:/app
+#      - ./secrets:/app/secrets
+#    networks:
+#      - inner
+#    command: 'python trading_diary.py'
+
+  data_collector:
+    build:
+      context: .
+      dockerfile: build/data-collector/Dockerfile
+    env_file: .env
+    restart: always
+    volumes:
+      - .:/app
+    networks:
+      - inner
+    command: 'python data_collector.py'
+
+  oracle_backend:
+    build:
+      context: .
+      dockerfile: build/oracle-backend/Dockerfile
+    env_file: .env
+    ports:
+      - "8777:8777"
+    restart: always
+    volumes:
+      - .:/app
+    networks:
+      - inner
+    command: 'uvicorn oracle_server:app --host 0.0.0.0 --port 8777'
+
+#  arbitrage_bot:
+#    build:
+#      context: .
+#      dockerfile: ./docker-images/arbitrage-bot/Dockerfile
+#    env_file: ./secrets/.env
+#    ports:
+#      - "5544:5544"
+#    restart: always
+#    volumes:
+#      - ./logs:/app/logs
+#      - ./src:/app
+#      - ./secrets:/app/secrets
+#    networks:
+#      - inner
+#    command: 'python arbitrage_bot.py'
+networks:
+  inner:

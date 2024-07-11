@@ -1,0 +1,16 @@
+version: '3.2'
+services:
+  candles_importer:
+    build:
+      context: .
+      dockerfile: ./docker-images/candles_importer/Dockerfile
+    env_file: ./secrets/.env
+    volumes:
+      - ./src:/app
+      - ./secrets:/app/secrets
+    networks:
+      - inner
+    restart: "no"
+    command: 'python candles_importer.py'
+networks:
+  inner:
